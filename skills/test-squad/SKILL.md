@@ -1,37 +1,37 @@
 ---
 name: test-squad
-description: 派發測試專家平行規劃並實作夠深夠廣的測試，最後由主線驗證；凡要補測試、補強或修正假測試（含 fake-test-hunter 報告）一律使用。
+description: Dispatch test specialists to plan and write deep, broad tests in parallel, then verify in the main thread. Use whenever tests need to be added, strengthened, or fixed, including fake-test-hunter reports.
 ---
 
 # Test Squad
 
-補出真測試：專家平行寫，主線親自驗證。沒給範圍先問，不全掃；可接 `fake-test-hunter` 報告。
+Produce real tests: specialists write in parallel, the main thread verifies personally. If no scope is given, ask first; never scan everything. Can take a `fake-test-hunter` report as input.
 
-## 判準
+## Criteria
 
-- 合格（任一）：**深**＝斷言驗的是被測邏輯的結果；**廣**＝涵蓋極端值與錯誤路徑。
-- 假測試：**理所當然**（不看程式也知道答案），或**不深不廣**。
+- Valid (any one): **deep** = the assertion checks the result of the logic under test; **broad** = covers extreme values and error paths.
+- Fake: **obvious** (answer is known without reading the code), or **neither deep nor broad**.
 
-## 認知
+## Principles
 
-1. 測試的價值＝原始碼改壞時它會 FAIL。有效 mutation：改的是該測試聲稱驗的邏輯、改完仍可載入、FAIL 來自斷言、還原後回到 PASS。
-2. 假通過來源：期望值等於預設值；斷言其實來自 mock 回傳；只生效一次的 mock 在被測呼叫前已被初始化流程消耗。選資料讓這些路徑無法單獨通過。
-3. 新測試在現狀就 FAIL：不得改斷言遷就，回報為疑似 bug，交使用者決定。
-4. 專家自述只是線索，結論以主線驗證為準。
+1. A test is worth something only if it FAILS when the source is broken. A valid mutation: changes the logic the test claims to verify, still loads after the change, the FAIL comes from the assertion, and it returns to PASS after reverting.
+2. Sources of false passes: expected value equals the default; the assertion actually comes from a mock return; a one-shot mock is consumed by initialization before the code under test calls it. Pick data so none of these paths can pass on their own.
+3. A new test that FAILS against the current code: do not edit the assertion to fit. Report it as a suspected bug and let the user decide.
+4. A specialist's self-report is only a lead. Conclusions rest on the main thread's verification.
 
-## 流程（不可省略）
+## Process (no step may be skipped)
 
-1. **基準**：被測原始碼有未提交改動就停下問。記下工作樹狀態，及全套測試與靜態檢查（若有）的失敗集合。
-2. **規劃**：逐項定動作，使用者確認後才派發。
-   - 刪除：理所當然，且無可留斷言。
-   - 補強：不深不廣，或觸犯認知 2。
-   - 新增：分支、極端值、錯誤路徑未覆蓋。
-3. **派發**：平行子代理，各在隔離工作區（如 worktree），避免 mutation 互相污染；同一測試檔只歸一位。prompt 附判準、認知全文與回報格式。專家只改測試檔，唯一例外是 mutation 暫改原始碼，回報前必須還原。每個新增／補強都做 mutation，回報「改了哪段邏輯 → 斷言失敗訊息」。
-4. **驗證**（主線）：
-   - 收回測試檔後，工作樹相對基準只多出測試檔改動。
-   - 全套測試與靜態檢查的失敗集合 ⊆ 基準失敗集合。
-   - 每位專家抽 ≥1 個、合計 ≥3（不足則全驗）重做 mutation；任一不符，該專家全部重做。
+1. **Baseline**: if the source under test has uncommitted changes, stop and ask. Record the working tree state, plus the failure set of the full test suite and static checks (if any).
+2. **Plan**: decide an action per item; dispatch only after the user confirms.
+   - Delete: obvious, with no assertion worth keeping.
+   - Strengthen: neither deep nor broad, or violates Principle 2.
+   - Add: branches, extreme values, or error paths not covered.
+3. **Dispatch**: parallel subagents, each in an isolated workspace (e.g. a worktree) so mutations do not contaminate each other; each test file belongs to one specialist only. The prompt includes the criteria, the full principles, and the report format. Specialists edit test files only; the sole exception is temporarily mutating source, which must be reverted before reporting. Every added or strengthened test gets a mutation, reported as "which logic was changed → assertion failure message".
+4. **Verify** (main thread):
+   - After collecting the test files, the working tree differs from the baseline only by test file changes.
+   - The failure set of the full suite and static checks ⊆ the baseline failure set.
+   - Redo the mutation for ≥1 test per specialist and ≥3 in total (all of them if fewer); if any mismatch, redo all of that specialist's work.
 
-## 輸出
+## Output
 
-動作統計與測試數變化、逐檔動作表、驗證結果、疑似 bug、已知限制（如 mutation 無法觸及的程式碼）。
+Action counts and change in test count, a per-file action table, verification results, suspected bugs, and known limitations (e.g. code mutation cannot reach).

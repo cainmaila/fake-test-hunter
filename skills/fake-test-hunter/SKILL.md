@@ -1,6 +1,6 @@
 ---
 name: fake-test-hunter
-description: 審查測試是否有意義，唯讀列出假測試；凡涉及測試品質或有效性的審查一律使用。
+description: Audit whether tests are meaningful and list fake tests (read-only). Use for any review of test quality or effectiveness.
 context: fork
 agent: general-purpose
 allowed-tools: Read, Grep, Glob, Bash
@@ -8,33 +8,33 @@ allowed-tools: Read, Grep, Glob, Bash
 
 # Fake Test Hunter
 
-範圍：有參數審該路徑；無參數審專案測試指令會跑的全部測試。
+Scope: if an argument is given, audit that path; otherwise audit every test the project's test command runs.
 
-先用 Glob 列出完整清單，逐檔審完，不可抽樣。
+List the full set of test files with Glob first, then review every file. No sampling.
 
-## 判準
+## Criteria
 
-**合格**（任一）：
+**Valid** (any one):
 
-1. **深**：輸入到輸出間經過有意義的邏輯，斷言驗的是該邏輯結果。
-2. **廣**：涵蓋極端值與例外，不只 happy path。同一 `describe` 整體夠廣即算。
+1. **Deep**: the input goes through meaningful logic before reaching the output, and the assertion checks the result of that logic.
+2. **Broad**: covers extreme values and exceptions, not just the happy path. A `describe` block that is broad as a whole counts.
 
-**假測試**（任一）：
+**Fake** (any one):
 
-1. **理所當然**：不看程式也知道答案。易漏的型態：mock 回什麼就斷言什麼、只驗 「存在／不為空／有被呼叫」（如 `toBeDefined`、`assertIsNotNone`）而不驗結果、斷言型別系統／編譯器已保證的事。
-2. **不深不廣**：未達任一合格條件。
+1. **Obvious**: the answer is known without reading the code. Easy-to-miss forms: asserting whatever the mock returns; only checking "exists / not empty / was called" (e.g. `toBeDefined`, `assertIsNotNone`) without checking the result; asserting something the type system or compiler already guarantees.
+2. **Neither deep nor broad**: meets neither validity criterion.
 
-深度須讀被測原始碼（追 import）才能判定，不可只看測試。
+Judging depth requires reading the source under test (follow imports). Do not judge from the test alone.
 
-## 輸出
+## Output
 
-只列假測試，依檔案分組（以下僅為格式，非待查項目）：
+List fake tests only, grouped by file (the template below is format only, not items to look for):
 
 ```
-### <檔案路徑>
-| 行 | 測試名稱 | 類型 | 理由 |
-|----|----------|------|------|
-| <行號> | '<測試名稱>' | 理所當然 / 不深不廣 | <一句話理由> |
+### <file path>
+| Line | Test name | Type | Reason |
+|------|-----------|------|--------|
+| <line> | '<test name>' | Obvious / Neither deep nor broad | <one-sentence reason> |
 ```
 
-結尾：`審查 N 檔 / M 測試，假測試 K 個`。沒抓到就說沒抓到，不硬湊。
+End with: `Reviewed N files / M tests, K fake tests`. If none are found, say so. Do not pad the list.
